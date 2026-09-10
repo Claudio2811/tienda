@@ -1,6 +1,10 @@
 ﻿name = "tienda"
+main = "src/index.js"
 compatibility_date = "2026-09-01"
-pages_build_output_dir = "./public"
+
+[assets]
+directory = "./assets"
+binding = "ASSETS"
 
 [[d1_databases]]
 binding = "DB"
