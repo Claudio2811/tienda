@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Producto · Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <div class="demo-banner" style="display:none">
+    🎭 <strong>MODO DEMO</strong> — Pagos no son reales.
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="brand">Tienda<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/productos.html">Productos</a></li>
+        <li><a href="/api-docs.html">API</a></li>
+      </ul>
+      <a href="/carrito.html" class="cart-btn">🛒 Carrito <span class="cart-count">0</span></a>
+    </div>
+  </nav>
+
+  <section class="container">
+    <div id="prod" class="pd"><div class="loading" style="grid-column:1/-1"><div class="spinner"></div></div></div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 Tienda</div>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    if (new URLSearchParams(location.search).get('demo') === '1') {
+      document.querySelector('.demo-banner').style.display = 'block';
+    }
+    const id = new URLSearchParams(location.search).get('id');
+    if (!id) {
+      document.getElementById('prod').innerHTML = '<p>Producto no especificado. <a href="/productos.html">Ver todos</a></p>';
+    } else {
+      api('/products/' + id).then(d => {
+        const p = d.producto;
+        document.getElementById('prod').innerHTML = `
+          <img class="pd-img" src="${p.imagen}" alt="${p.nombre}" />
+          <div>
+            <div class="pd-cat">${p.categoria}</div>
+            <h1 class="pd-name">${p.nombre}</h1>
+            <div class="pd-price">${formatCLP(p.precio)} <small style="font-size:14px;color:var(--muted)">CLP</small></div>
+            <p class="pd-desc">${p.descripcion}</p>
+            <div class="pd-sku">SKU: <code>${p.sku}</code> · Stock: ${p.stock} unidades</div>
+            <div class="pd-qty">
+              <span style="font-size:14px;font-weight:600">Cantidad:</span>
+              <div class="qty-input">
+                <button onclick="document.getElementById('qty').value=Math.max(1,parseInt(document.getElementById('qty').value)-1)">−</button>
+                <input id="qty" type="number" value="1" min="1" max="${p.stock}" />
+                <button onclick="document.getElementById('qty').value=Math.min(${p.stock},parseInt(document.getElementById('qty').value)+1)">+</button>
+              </div>
+            </div>
+            <button class="btn btn-primary btn-lg btn-block" onclick="handleAdd()">Agregar al carro</button>
+            <a href="/productos.html" style="display:block;text-align:center;margin-top:12px;font-size:14px;color:var(--ink-soft)">← Volver al catálogo</a>
+          </div>
+        `;
+        window._product = p;
+      }).catch(e => {
+        document.getElementById('prod').innerHTML = '<p>Error: ' + e.message + '</p>';
+      });
+    }
+    function handleAdd() {
+      const cant = parseInt(document.getElementById('qty').value) || 1;
+      addToCart(window._product, cant);
+    }
+  </script>
+</body>
+</html>

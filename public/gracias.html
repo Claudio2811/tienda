@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pedido confirmado · Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="brand">Tienda<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/productos.html">Productos</a></li>
+        <li><a href="/api-docs.html">API</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <section class="section" style="padding-top:80px">
+    <div class="container" style="max-width:600px;text-align:center">
+      <div style="width:80px;height:80px;background:#16A34A;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;margin-bottom:24px">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      </div>
+      <h1 style="font-size:36px;margin-bottom:16px">¡Pedido recibido!</h1>
+      <p style="color:var(--ink-soft);margin-bottom:32px">Tu pedido fue creado exitosamente. Te enviaremos un correo cuando sea despachado.</p>
+
+      <div class="alert alert-info" id="demo-msg" style="display:none;text-align:left">
+        🎭 <strong>Esto fue un pedido demo.</strong> No se procesó ningún pago real y el stock no se descontó. Para probar pagos reales, quitá el parámetro <code>?demo=1</code> de la URL.
+      </div>
+
+      <div class="cart-summary" style="position:static;text-align:left">
+        <h3>Detalles del pedido</h3>
+        <div id="pedido-detail" class="loading"><div class="spinner"></div></div>
+      </div>
+
+      <div style="margin-top:32px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="/productos.html" class="btn btn-primary">Seguir comprando</a>
+        <a href="/api-docs.html" class="btn btn-outline">Ver API REST</a>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 Tienda</div>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    const isDemo = new URLSearchParams(location.search).get('demo') === '1';
+    if (isDemo) document.getElementById('demo-msg').style.display = 'block';
+
+    const codigo = new URLSearchParams(location.search).get('codigo');
+    if (codigo) {
+      api('/orders/' + codigo).then(d => {
+        const p = d.pedido;
+        document.getElementById('pedido-detail').innerHTML = `
+          <div class="cart-line"><span><strong>Código</strong></span><span><code>${p.codigo}</code></span></div>
+          <div class="cart-line"><span>Cliente</span><span>${p.customer_nombre}</span></div>
+          <div class="cart-line"><span>Email</span><span>${p.customer_email}</span></div>
+          <div class="cart-line"><span>Items</span><span>${p.items.length} producto(s)</span></div>
+          <div class="cart-line"><span>Subtotal</span><span>${formatCLP(p.subtotal)}</span></div>
+          <div class="cart-line"><span>Envío</span><span>${p.envio === 0 ? 'Gratis' : formatCLP(p.envio)}</span></div>
+          <div class="cart-line total"><span>Total</span><span>${formatCLP(p.total)}</span></div>
+          <div class="cart-line"><span>Estado</span><span><strong style="color:var(--accent)">${p.estado.toUpperCase()}</strong></span></div>
+          ${p.is_demo ? '<div class="cart-line"><span>Tipo</span><span style="color:#92400E;font-weight:600">DEMO</span></div>' : ''}
+        `;
+      }).catch(e => {
+        document.getElementById('pedido-detail').innerHTML = '<p style="color:var(--danger)">Error: ' + e.message + '</p>';
+      });
+    } else {
+      document.getElementById('pedido-detail').innerHTML = '<p>No se especificó código de pedido.</p>';
+    }
+  </script>
+</body>
+</html>

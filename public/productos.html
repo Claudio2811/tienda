@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Productos · Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <div class="demo-banner" style="display:none">
+    🎭 <strong>MODO DEMO</strong> — Pagos no son reales.
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="brand">Tienda<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/productos.html">Productos</a></li>
+        <li><a href="/api-docs.html">API</a></li>
+      </ul>
+      <a href="/carrito.html" class="cart-btn">🛒 Carrito <span class="cart-count">0</span></a>
+    </div>
+  </nav>
+
+  <section class="section" style="padding-top:40px">
+    <div class="container">
+      <h1 class="section-title" style="font-size:32px;margin-bottom:8px">Todos los productos</h1>
+      <p class="section-sub" style="margin-bottom:24px">Filtrá por categoría o explorá todo el catálogo</p>
+
+      <div id="cats" class="cats"></div>
+      <div id="grid" class="products"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 Tienda · Demo</div>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    if (new URLSearchParams(location.search).get('demo') === '1') {
+      document.querySelector('.demo-banner').style.display = 'block';
+    }
+
+    const params = new URLSearchParams(location.search);
+    let activeCat = params.get('categoria') || '';
+
+    function load(cat) {
+      activeCat = cat;
+      const url = cat ? '/products?categoria=' + encodeURIComponent(cat) : '/products';
+      document.getElementById('grid').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      api(url).then(d => {
+        if (d.productos.length === 0) {
+          document.getElementById('grid').innerHTML = '<p style="text-align:center;padding:40px;color:var(--muted)">No hay productos en esta categoría</p>';
+          return;
+        }
+        document.getElementById('grid').innerHTML = d.productos.map(productCard).join('');
+      });
+    }
+
+    function loadCats() {
+      api('/products').then(d => {
+        const cats = [...new Set(d.productos.map(p => p.categoria))].sort();
+        const html = ['<button class="cat-pill ' + (activeCat === '' ? 'active' : '') + '" data-cat="">Todos</button>']
+          .concat(cats.map(c => '<button class="cat-pill ' + (activeCat === c ? 'active' : '') + '" data-cat="' + c + '">' + c.charAt(0).toUpperCase() + c.slice(1) + '</button>'))
+          .join('');
+        document.getElementById('cats').innerHTML = html;
+        document.querySelectorAll('.cat-pill').forEach(b => {
+          b.addEventListener('click', () => {
+            const cat = b.dataset.cat;
+            const url = new URL(location.href);
+            if (cat) url.searchParams.set('categoria', cat); else url.searchParams.delete('categoria');
+            history.replaceState({}, '', url);
+            document.querySelectorAll('.cat-pill').forEach(x => x.classList.remove('active'));
+            b.classList.add('active');
+            load(cat);
+          });
+        });
+      });
+    }
+
+    loadCats();
+    load(activeCat);
+  </script>
+</body>
+</html>

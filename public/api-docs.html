@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>API REST · Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="brand">Tienda<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/productos.html">Productos</a></li>
+        <li><a href="/api-docs.html">API</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <section class="section" style="padding-top:48px">
+    <div class="container" style="max-width:900px">
+      <h1 style="font-size:36px;margin-bottom:8px">API REST</h1>
+      <p style="color:var(--ink-soft);margin-bottom:32px">Endpoints para integrar esta tienda con tu ERP, sistema de boletas, o cualquier sistema externo.</p>
+
+      <div class="alert alert-info">
+        <strong>Modo demo:</strong> Hacé pedidos con el parámetro <code>?demo=1</code> para no procesar pagos reales. En modo demo, el stock NO se descuenta y el ERP webhook recibe un campo <code>is_demo: true</code>.
+      </div>
+
+      <h2 style="margin-top:48px">Endpoints</h2>
+
+      <h3 style="margin-top:24px">Productos</h3>
+      <p style="color:var(--ink-soft);font-size:14px;margin-bottom:8px">Listar y obtener productos del catálogo.</p>
+
+      <h4>GET /api/products</h4>
+      <p>Lista todos los productos. Soporta filtros por query string.</p>
+      <p style="font-size:13px;color:var(--ink-soft)">Parámetros opcionales: <code>categoria</code>, <code>destacado=1</code>, <code>q=texto</code></p>
+      <pre>curl https://tienda.pages.dev/api/products?categoria=electronica</pre>
+
+      <h4>GET /api/products/:id</h4>
+      <p>Obtiene un producto específico por su ID.</p>
+      <pre>curl https://tienda.pages.dev/api/products/2</pre>
+
+      <h3 style="margin-top:32px">Pedidos</h3>
+
+      <h4>GET /api/orders</h4>
+      <p>Lista los pedidos. Útil para sincronizar con tu ERP.</p>
+      <p style="font-size:13px;color:var(--ink-soft)">Parámetros opcionales: <code>codigo=PED-2026-0001</code>, <code>estado=pendiente</code>, <code>limit=50</code></p>
+      <pre>curl https://tienda.pages.dev/api/orders?estado=pendiente&limit=20</pre>
+
+      <h4>GET /api/orders/:codigo</h4>
+      <p>Obtiene el detalle completo de un pedido, incluyendo todos los items.</p>
+      <pre>curl https://tienda.pages.dev/api/orders/PED-2026-0001</pre>
+
+      <h4>POST /api/orders</h4>
+      <p>Crea un nuevo pedido. Devuelve el pedido con su código único.</p>
+      <p style="font-size:13px;color:var(--ink-soft)">Campos requeridos: <code>customer_nombre</code>, <code>customer_email</code>, <code>customer_telefono</code>, <code>customer_direccion</code>, <code>items</code> (array de <code>{producto_id, cantidad}</code>)</p>
+      <pre>curl -X POST https://tienda.pages.dev/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_nombre": "Juan Pérez",
+    "customer_email": "juan@example.cl",
+    "customer_telefono": "+56 9 1234 5678",
+    "customer_direccion": "Av. Principal 123, Depto 45",
+    "customer_comuna": "Salamanca",
+    "customer_region": "Coquimbo",
+    "items": [
+      { "producto_id": 2, "cantidad": 1 },
+      { "producto_id": 4, "cantidad": 2 }
+    ],
+    "is_demo": true
+  }'</pre>
+
+      <h3 style="margin-top:32px">Webhooks</h3>
+
+      <h4>POST /api/webhooks/mercadopago</h4>
+      <p>Endpoint para recibir notificaciones de pago de Mercado Pago. <strong>Configurá esta URL en tu panel de Mercado Pago</strong> para que te notifique cuando un pago se aprueba, rechaza, etc.</p>
+      <pre>POST https://tienda.pages.dev/api/webhooks/mercadopago
+Content-Type: application/json
+
+{
+  "type": "payment",
+  "data": { "id": 1234567890 },
+  "external_reference": "PED-2026-0001"
+}</pre>
+
+      <h3 style="margin-top:32px">ERP / Sistema externo</h3>
+
+      <h4>Webhook saliente (configurable)</h4>
+      <p>Si configurás la variable de entorno <code>ERP_WEBHOOK_URL</code> en el proyecto Cloudflare, cada pedido nuevo se envía como JSON a esa URL.</p>
+      <p>Payload que recibe tu ERP:</p>
+      <pre>{
+  "evento": "pedido.creado",
+  "pedido": {
+    "id": 14,
+    "codigo": "PED-2026-0001",
+    "customer": {
+      "nombre": "Juan Pérez",
+      "email": "juan@example.cl",
+      "telefono": "+56 9 1234 5678",
+      "direccion": "Av. Principal 123, Depto 45",
+      "comuna": "Salamanca",
+      "region": "Coquimbo"
+    },
+    "items": [
+      {
+        "producto_id": 2,
+        "nombre": "Smartwatch Deportivo",
+        "cantidad": 1,
+        "precio_unitario": 129990,
+        "subtotal": 129990
+      }
+    ],
+    "subtotal": 129990,
+    "envio": 0,
+    "total": 129990,
+    "notas": null,
+    "is_demo": false,
+    "created_at": "2026-09-09T20:00:00.000Z"
+  }
+}</pre>
+
+      <p style="margin-top:16px"><strong>Para activar el webhook ERP</strong>: en Cloudflare Dashboard, andá a tu Pages project → Settings → Environment variables, y agregá <code>ERP_WEBHOOK_URL</code> con la URL de tu endpoint (ej: <code>https://tu-erp.cl/api/webhooks/pedidos</code>).</p>
+
+      <h2 style="margin-top:48px">Próximos pasos</h2>
+      <ul style="margin-top:16px;padding-left:24px;line-height:2">
+        <li>Conectar <strong>Mercado Pago</strong> con credenciales reales (sandbox primero)</li>
+        <li>Integrar con tu <strong>ERP</strong> (Bind, Defontana, custom, etc.) vía webhook</li>
+        <li>Generar <strong>boletas/facturas PDF</strong> automáticas al confirmar pedido</li>
+        <li>Panel admin con login para gestionar productos y pedidos</li>
+        <li>Sistema de emails transaccionales (confirmación, envío)</li>
+      </ul>
+
+      <div class="alert alert-success" style="margin-top:32px">
+        <strong>Probá ahora:</strong> Hacé tu primer pedido en <a href="/productos.html">/productos.html</a> y luego consultalo via API en <a href="/api/orders">/api/orders</a>.
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 Tienda</div>
+    </div>
+  </footer>
+</body>
+</html>

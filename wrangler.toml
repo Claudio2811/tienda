@@ -1,0 +1,8 @@
+﻿name = "tienda"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "./public"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tienda-db"
+database_id = "150a6872-880b-451d-a120-fd76d0d0bc39"

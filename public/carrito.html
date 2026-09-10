@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrito · Tienda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <div class="demo-banner" style="display:none">
+    🎭 <strong>MODO DEMO</strong> — Pagos no son reales.
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="brand">Tienda<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/productos.html">Productos</a></li>
+        <li><a href="/api-docs.html">API</a></li>
+      </ul>
+      <a href="/carrito.html" class="cart-btn">🛒 Carrito <span class="cart-count">0</span></a>
+    </div>
+  </nav>
+
+  <section class="cart">
+    <div class="container">
+      <h1 style="font-size:32px;margin-bottom:24px">Tu carrito</h1>
+      <div class="cart-grid">
+        <div class="cart-items" id="items"></div>
+        <div class="cart-summary" id="summary"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-bottom">© 2026 Tienda</div>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    if (new URLSearchParams(location.search).get('demo') === '1') {
+      document.querySelector('.demo-banner').style.display = 'block';
+    }
+
+    function renderCart() {
+      const itemsEl = document.getElementById('items');
+      const sumEl = document.getElementById('summary');
+
+      if (TIENDA.cart.length === 0) {
+        itemsEl.innerHTML = '<div class="cart-empty">Tu carrito está vacío. <br><br><a href="/productos.html" class="btn btn-primary">Ver productos</a></div>';
+        sumEl.innerHTML = '';
+        return;
+      }
+
+      itemsEl.innerHTML = TIENDA.cart.map(item => `
+        <div class="cart-item">
+          <img src="${item.imagen}" alt="${item.nombre}" />
+          <div>
+            <div class="cart-item-name">${item.nombre}</div>
+            <div class="cart-item-cat">${formatCLP(item.precio)} c/u</div>
+          </div>
+          <div class="qty-input">
+            <button onclick="updateCartItem(${item.id}, ${item.cantidad - 1}); renderCart()">−</button>
+            <input type="number" value="${item.cantidad}" onchange="updateCartItem(${item.id}, parseInt(this.value)||0); renderCart()" min="0" />
+            <button onclick="updateCartItem(${item.id}, ${item.cantidad + 1}); renderCart()">+</button>
+          </div>
+          <div>
+            <div class="cart-item-price">${formatCLP(item.precio * item.cantidad)}</div>
+            <button class="cart-item-remove" onclick="removeFromCart(${item.id})">Quitar</button>
+          </div>
+        </div>
+      `).join('');
+
+      const subtotal = cartTotal();
+      const envio = subtotal >= 50000 ? 0 : 3990;
+      const total = subtotal + envio;
+
+      sumEl.innerHTML = `
+        <h3>Resumen</h3>
+        <div class="cart-line"><span>Subtotal</span><span>${formatCLP(subtotal)}</span></div>
+        <div class="cart-line"><span>Envío ${envio === 0 ? '(gratis sobre $50.000)' : ''}</span><span>${envio === 0 ? 'Gratis' : formatCLP(envio)}</span></div>
+        <div class="cart-line total"><span>Total</span><span>${formatCLP(total)}</span></div>
+        <a href="/checkout.html" class="btn btn-primary btn-block btn-lg" style="margin-top:20px">Continuar al pago</a>
+        <a href="/productos.html" style="display:block;text-align:center;margin-top:12px;font-size:14px;color:var(--ink-soft)">← Seguir comprando</a>
+      `;
+    }
+
+    renderCart();
+  </script>
+</body>
+</html>

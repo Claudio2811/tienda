@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es-CL">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tienda · Productos físicos</title>
+  <meta name="description" content="Tienda online con productos físicos. Pagos con Mercado Pago, API REST para integraciones." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+
+  <div class="demo-banner" style="display:none">
+    🎭 <strong>MODO DEMO</strong> — Los pagos no son reales. Agrega <code>?demo=1</code> a la URL para ver este banner.
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="/" class="brand">Tienda<span>.</span></a>
+      <ul class="nav-links">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/productos.html">Productos</a></li>
+        <li><a href="/api-docs.html">API</a></li>
+      </ul>
+      <a href="/carrito.html" class="cart-btn">
+        🛒 Carrito
+        <span class="cart-count">0</span>
+      </a>
+    </div>
+  </nav>
+
+  <section class="hero">
+    <div class="container">
+      <span class="hero-eyebrow">Envío a todo Chile</span>
+      <h1>Productos físicos con pago integrado</h1>
+      <p>Catálogo en vivo, carro de compras, checkout con Mercado Pago, y API REST para integrar con tu ERP.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a href="/productos.html" class="btn btn-primary btn-lg">Ver productos</a>
+        <a href="/api-docs.html" class="btn btn-outline btn-lg">Documentación API</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div>
+          <h2 class="section-title">Productos destacados</h2>
+          <p class="section-sub">Una selección de los más vendidos</p>
+        </div>
+        <a href="/productos.html" class="btn btn-outline">Ver todos →</a>
+      </div>
+      <div id="destacados" class="products"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="brand" style="color:white;font-size:24px">Tienda<span style="color:var(--accent)">.</span></div>
+          <p style="margin-top:12px;font-size:14px">E-commerce demo con Cloudflare Pages + Workers + D1. Pagos con Mercado Pago, API REST para integraciones externas.</p>
+        </div>
+        <div>
+          <h4>Tienda</h4>
+          <ul>
+            <li><a href="/productos.html">Todos los productos</a></li>
+            <li><a href="/carrito.html">Mi carrito</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Desarrolladores</h4>
+          <ul>
+            <li><a href="/api-docs.html">API REST</a></li>
+            <li><a href="/api/products">GET /api/products</a></li>
+            <li><a href="https://github.com/Claudio2811/tienda" target="_blank" rel="noopener">Código fuente</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">© 2026 Tienda · Demo construida con Cloudflare Pages + Workers + D1</div>
+    </div>
+  </footer>
+
+  <script src="/app.js"></script>
+  <script>
+    // Demo banner
+    if (new URLSearchParams(location.search).get('demo') === '1') {
+      document.querySelector('.demo-banner').style.display = 'block';
+    }
+    // Cargar destacados
+    api('/products?destacado=1').then(d => {
+      document.getElementById('destacados').innerHTML = d.productos.map(productCard).join('');
+    }).catch(e => {
+      document.getElementById('destacados').innerHTML = '<p style="color:var(--danger)">Error: ' + e.message + '</p>';
+    });
+  </script>
+</body>
+</html>
